@@ -5,22 +5,22 @@ spring:
   mail:
     host: smtp.naver.com
     port: 465
-    username: "irlawjdgkr@naver.com"
-    password: "MWXFP3UNUNZR"
+    username: #당신의 네이버 이메일 주소를 쓰세요
+    password: #당신의 네이버 메일 앱 인증비밀번호를 쓰세요.
     protocol: smtp
     properties:
       mail:
         smtp:
           auth: true
           ssl:
-            enable: true
+            enabled: true
 
 # database setting
 
   datasource:
-    url: jdbc:mariadb://localhost:3306/jpastudy
-    username: root
-    password: mariadb
+    url: jdbc:mariadb://localhost:3306/ # 데이터베이스를 입력하고 사용
+    username: # 데이터베이스 사용자 이름
+    password: # 데이터베이스 사용자 비밀번호
     driver-class-name: org.mariadb.jdbc.Driver
   jpa:
     # DBMS dialect setting
