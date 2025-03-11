@@ -33,11 +33,20 @@ public class EventUser {
     @Builder.Default
     private Role role = Role.COMMON; // 권한
 
-    @CreationTimestamp
     private LocalDateTime createdAt;
 
     // 이메일 인증을 완료했는지 여부
     @Column(nullable = false)
     private boolean emailVerified;
 
+    // 이메일 인증 완료를 처리하는 메서드
+    public void emailVerify() {
+        this.emailVerified = true;
+    }
+
+    // 회원가입을 마무리하는 메서드
+    public void confirm(String password) {
+        this.password = password;
+        this.createdAt = LocalDateTime.now();
+    }
 }
