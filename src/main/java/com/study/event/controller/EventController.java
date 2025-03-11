@@ -4,10 +4,14 @@ import com.study.event.domain.event.dto.request.EventCreate;
 import com.study.event.domain.event.dto.response.EventDetailResponse;
 import com.study.event.domain.event.dto.response.EventResponse;
 import com.study.event.domain.event.entity.Event;
+import com.study.event.domain.eventUser.entity.Role;
+import com.study.event.jwt.dto.TokenUserInfo;
 import com.study.event.service.EventService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,8 +30,9 @@ public class EventController {
     @GetMapping
     public ResponseEntity<?> getList(
             @RequestParam(required = false) String sort,
-            @RequestParam(defaultValue = "1") int page
-    ) {
+            @RequestParam(defaultValue = "1") int page,
+            @AuthenticationPrincipal TokenUserInfo userInfo
+            ) {
         if (sort == null) {
             return ResponseEntity.badRequest().body(
                     Map.of(
@@ -36,24 +41,41 @@ public class EventController {
             );
         }
 
-        Map<String, Object> events = eventService.getEvents(sort, page);
+        Map<String, Object> events = eventService.getEvents(sort, page, userInfo.userId());
 
         return ResponseEntity.ok().body(events);
     }
 
-    // 등록 요청
+    // 등록 요청 - (어떤 유저가 등록한 이벤트인지 확인)
     @PostMapping
-    public ResponseEntity<?> register(@RequestBody EventCreate dto) {
-        eventService.saveEvent(dto);
+    public ResponseEntity<?> register(
+            @RequestBody EventCreate dto,
+            @AuthenticationPrincipal TokenUserInfo userInfo
+    ) {
+        try {
+            eventService.saveEvent(dto, userInfo.email());
 
-        return ResponseEntity.ok().body(Map.of(
-                "message", "이벤트가 정상 등록되었습니다."
-        ));
+            return ResponseEntity.ok().body(Map.of(
+                    "message", "이벤트가 정상 등록되었습니다."
+            ));
+        } catch (RuntimeException e) {
+            log.warn("인가에 실패했습니다.");
+            return ResponseEntity.status(403).body(Map.of(
+                    "message", e.getMessage()
+            ));
+        }
     }
 
     // 단일 조회 요청
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('PREMIUM')")
     @GetMapping("/{eventId}")
-    public ResponseEntity<?> getEvent(@PathVariable Long eventId) {
+    public ResponseEntity<?> getEvent(
+            @PathVariable Long eventId,
+            @AuthenticationPrincipal TokenUserInfo userInfo
+    ) {
+//        if (userInfo.role() == Role.COMMON) {
+//            return ResponseEntity.status(403).body("권한이 없습니다.");
+//        }
 
         if (eventId == null || eventId < 1) {
             String errorMessage = "eventId가 유효하지 않습니다.";

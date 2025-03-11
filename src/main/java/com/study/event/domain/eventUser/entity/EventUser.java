@@ -1,10 +1,13 @@
 package com.study.event.domain.eventUser.entity;
 
+import com.study.event.domain.event.entity.Event;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @ToString
@@ -39,6 +42,11 @@ public class EventUser {
     @Column(nullable = false)
     private boolean emailVerified;
 
+    // 이벤트와 양방향 연관관계 매핑
+    @OneToMany(mappedBy = "eventUser", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Event> eventList = new ArrayList<>();
+
     // 이메일 인증 완료를 처리하는 메서드
     public void emailVerify() {
         this.emailVerified = true;
@@ -48,5 +56,10 @@ public class EventUser {
     public void confirm(String password) {
         this.password = password;
         this.createdAt = LocalDateTime.now();
+    }
+
+    // 등급업 처리
+    public void promotion() {
+        this.role = Role.PREMIUM;
     }
 }
